@@ -327,6 +327,27 @@
       border-radius:14px;
       margin-top:12px;
     }
+    #rawCsvTable th, #rawCsvTable td{
+    padding:10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    font-size: 12px;
+    color: rgba(255,255,255,.88);
+    white-space: nowrap;
+    }
+    #rawCsvTable th{
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: rgba(10,16,32,.88);
+    backdrop-filter: blur(12px);
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    font-size: 11px;
+    color: rgba(255,255,255,.72);
+    }
+    #rawCsvTable tr:hover td{
+    background: rgba(255,255,255,.05);
+    }
   </style>
 </head>
 
@@ -396,8 +417,12 @@
         </div>
       
         <div style="border-top:1px solid rgba(255,255,255,.08);">
-          <pre id="rawCsv"
-               style="margin:0; padding:14px; max-height:300px; overflow:auto; background: rgba(0,0,0,.16); color: rgba(255,255,255,.88); font-size: 12px; line-height: 1.4;"></pre>
+            <div style="max-height:300px; overflow:auto; background: rgba(0,0,0,.16);">
+                <table id="rawCsvTable" style="width:100%; border-collapse:collapse; min-width:700px;">
+                  <thead id="rawCsvThead"></thead>
+                  <tbody id="rawCsvTbody"></tbody>
+                </table>
+              </div>
         </div>
       
         <div class="footer" style="border-top:1px solid rgba(255,255,255,.08);">
@@ -436,6 +461,8 @@
   const elComp = document.getElementById("compFilter");
   const elRawCsv = document.getElementById("rawCsv");
   const elCsvBytes = document.getElementById("csvBytes");
+  const elRawCsvThead = document.getElementById("rawCsvThead");
+  const elRawCsvTbody = document.getElementById("rawCsvTbody");
 
   function showError(msg){ elErr.style.display="block"; elErr.textContent=msg; }
   function clearError(){ elErr.style.display="none"; elErr.textContent=""; }
@@ -734,6 +761,8 @@
         if (elRawCsv) elRawCsv.textContent = text;
         if (elCsvBytes) elCsvBytes.textContent = `${text.length.toLocaleString()} chars`;
       const rows = parseCSV(text).filter(r => r.some(c => String(c).trim() !== ""));
+      renderRawCsvTable(rows, 200);
+        if (elCsvBytes) elCsvBytes.textContent = `${text.length.toLocaleString()} chars`;
       if (rows.length < 2) throw new Error("CSV has no data rows.");
 
       const headers = rows[0].map(h => normHeader(h));
@@ -789,6 +818,48 @@
     showError("Copy failed. Your browser may block clipboard access on this page.");
   }
 });
+function renderRawCsvTable(rows, maxRows = 200){
+  if (!elRawCsvThead || !elRawCsvTbody) return;
+
+  elRawCsvThead.innerHTML = "";
+  elRawCsvTbody.innerHTML = "";
+
+  if (!rows || rows.length === 0) return;
+
+  const headers = rows[0];
+  const headTr = document.createElement("tr");
+  headers.forEach(h => {
+    const th = document.createElement("th");
+    th.textContent = String(h || "").trim();
+    headTr.appendChild(th);
+  });
+  elRawCsvThead.appendChild(headTr);
+
+  const limit = Math.min(rows.length - 1, maxRows);
+  for (let i = 1; i <= limit; i++){
+    const tr = document.createElement("tr");
+    const row = rows[i] || [];
+    for (let c = 0; c < headers.length; c++){
+      const td = document.createElement("td");
+      td.textContent = String(row[c] ?? "").trim();
+      tr.appendChild(td);
+    }
+    elRawCsvTbody.appendChild(tr);
+  }
+
+  // If trimmed
+  if (rows.length - 1 > maxRows){
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = headers.length;
+    td.style.color = "rgba(255,255,255,.65)";
+    td.style.padding = "10px 12px";
+    td.textContent = `Showing first ${maxRows} rows of ${rows.length - 1}.`;
+    tr.appendChild(td);
+    elRawCsvTbody.appendChild(tr);
+  }
+}
+
 
   wireSortHeaders();
   load();
