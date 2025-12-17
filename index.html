@@ -825,7 +825,7 @@
       const rows = parseCSV(text1).filter(r => r.some(c => String(c).trim() !== ""));
       renderRawCsvTable(rows, 200);
       renderHouseTableFromCsvText(text2);
-        if (elCsvBytes) elCsvBytes.textContent = `${text.length.toLocaleString()} chars`;
+        if (elCsvBytes) elCsvBytes.textContent = `${text1.length.toLocaleString()} chars`;
       if (rows.length < 2) throw new Error("CSV has no data rows.");
 
       const headers = rows[0].map(h => normHeader(h));
