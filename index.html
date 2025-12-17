@@ -699,21 +699,23 @@
       tr.innerHTML = `
         <td class="rank">${rank <= 3 ? (rank===1?"🥇":"") + (rank===2?"🥈":"") + (rank===3?"🥉":"") : "#"+rank}</td>
         <td>
-          <div class="playerCell">
+            <div class="playerCell">
             <div class="avatar" style="width:34px;height:34px;border-radius:12px">${initials(p.player)}</div>
             <div>
-              <div class="name">${escapeHtml(p.player)}</div>
-              <div class="sub">🎮 ${p.competitionsCount} competitions</div>
+                <div class="name">${escapeHtml(p.player)}</div>
+                <div class="sub">🎮 ${p.competitionsCount} competitions</div>
             </div>
-          </div>
+            </div>
         </td>
         <td>${escapeHtml(p.house)}</td>
-        <td class="right">${p.competitionsCount}</td>
+
         <td class="right">
-          <div style="font-weight:900;font-size:15px">${formatPoints(p.points)}</div>
-          <div class="spark" style="transform:scaleX(${sparkScale(p.points, max)})"></div>
+            <div style="font-weight:900;font-size:15px">${formatPoints(p.points)}</div>
+            <div class="spark" style="transform:scaleX(${sparkScale(p.points, max)})"></div>
         </td>
-      `;
+
+        <td class="right">${p.competitionsCount}</td>
+        `;
       elTbody.appendChild(tr);
     });
 
