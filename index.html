@@ -348,6 +348,28 @@
     #rawCsvTable tr:hover td{
     background: rgba(255,255,255,.05);
     }
+    #houseTable th, #houseTable td{
+  padding:10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  font-size: 12px;
+  color: rgba(255,255,255,.88);
+  white-space: nowrap;
+}
+#houseTable th{
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: rgba(10,16,32,.88);
+  backdrop-filter: blur(12px);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-size: 11px;
+  color: rgba(255,255,255,.72);
+}
+#houseTable tr:hover td{
+  background: rgba(255,255,255,.05);
+}
+
   </style>
 </head>
 
@@ -382,10 +404,33 @@
     </div>
 
     <div class="grid">
-      <div class="card podium">
-        <h2>🥇 Podium</h2>
-        <div class="podiumRow" id="podiumRow"></div>
-      </div>
+        <div class="card podium">
+            <h2>🥇 Podium</h2>
+            <div class="podiumRow" id="podiumRow"></div>
+          
+            <!-- NEW: House leaderboard table -->
+            <div style="margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,.10);">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+                <div style="font-size:13px; letter-spacing:.12em; text-transform:uppercase; color: rgba(255,255,255,.78);">
+                  🏠 House Leaderboard
+                </div>
+                <div style="color: var(--muted); font-size: 12px;" id="houseStatus">—</div>
+              </div>
+          
+              <div style="max-height:220px; overflow:auto; background: rgba(0,0,0,.12); border:1px solid rgba(255,255,255,.10); border-radius:14px;">
+                <table id="houseTable" style="width:100%; border-collapse:collapse; min-width:420px;">
+                  <thead>
+                    <tr>
+                      <th style="text-align:left;">House</th>
+                      <th style="text-align:right;">Overall Points</th>
+                    </tr>
+                  </thead>
+                  <tbody id="houseTbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
 
       <div class="card">
         <div class="table-wrap">
@@ -437,6 +482,7 @@
 <script>
   // ✅ Replace with your published CSV URL:
   const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRu3etH39q0hOlR_YLhJdUqTvSQeAY_RLpcz1X1qSAaYnHo2SlAqkQK9RXzMt0GDUoy5-3aLTHyyHFt/pub?gid=0&single=true&output=csv";
+  const SHEET2_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRu3etH39q0hOlR_YLhJdUqTvSQeAY_RLpcz1X1qSAaYnHo2SlAqkQK9RXzMt0GDUoy5-3aLTHyyHFt/pub?gid=2023721187&single=true&output=csv";
 
   const REFRESH_SECONDS = 300;
   document.getElementById("refreshEvery").textContent = `${REFRESH_SECONDS}s`;
@@ -463,6 +509,8 @@
   const elCsvBytes = document.getElementById("csvBytes");
   const elRawCsvThead = document.getElementById("rawCsvThead");
   const elRawCsvTbody = document.getElementById("rawCsvTbody");
+  const elHouseTbody = document.getElementById("houseTbody");
+  const elHouseStatus = document.getElementById("houseStatus");
 
   function showError(msg){ elErr.style.display="block"; elErr.textContent=msg; }
   function clearError(){ elErr.style.display="none"; elErr.textContent=""; }
@@ -753,17 +801,30 @@
     return;
     }
 
-    try {
-      const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes("?") ? "&" : "?") + "cb=" + Date.now();
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!SHEET2_CSV_URL || SHEET2_CSV_URL.includes("PASTE_YOUR_PUBLISHED_CSV_URL_HERE")) {
+    showError("Paste your published Google Sheets CSV URL into SHEET2_CSV_URL in index.html.");
+    elStatus.textContent = "Missing CSV URL";
+    return;
+    }
 
-      const text = await res.text();
+    try {
+        const url1 = SHEET_CSV_URL + (SHEET_CSV_URL.includes("?") ? "&" : "?") + "cb=" + Date.now();
+        const url2 = SHEET2_CSV_URL + (SHEET2_CSV_URL.includes("?") ? "&" : "?") + "cb=" + Date.now();
+        const [res1, res2] = await Promise.all([
+            fetch(url1, { cache: "no-store", headers: { "Cache-Control": "no-cache" } }),
+            fetch(url2, { cache: "no-store", headers: { "Cache-Control": "no-cache" } })
+            ]);
+        if (!res1.ok) throw new Error(`Main CSV HTTP ${res1.status}`);
+        if (!res2.ok) throw new Error(`House CSV HTTP ${res2.status}`);
+
+        const text1 = await res1.text();
+        const text2 = await res2.text();
       // Show raw CSV
-        if (elRawCsv) elRawCsv.textContent = text;
-        if (elCsvBytes) elCsvBytes.textContent = `${text.length.toLocaleString()} chars`;
-      const rows = parseCSV(text).filter(r => r.some(c => String(c).trim() !== ""));
+        if (elRawCsv) elRawCsv.textContent = text1;
+        if (elCsvBytes) elCsvBytes.textContent = `${text1.length.toLocaleString()} chars`;
+      const rows = parseCSV(text1).filter(r => r.some(c => String(c).trim() !== ""));
       renderRawCsvTable(rows, 200);
+      renderHouseTableFromCsvText(text2);
         if (elCsvBytes) elCsvBytes.textContent = `${text.length.toLocaleString()} chars`;
       if (rows.length < 2) throw new Error("CSV has no data rows.");
 
@@ -860,6 +921,48 @@ function renderRawCsvTable(rows, maxRows = 200){
     tr.appendChild(td);
     elRawCsvTbody.appendChild(tr);
   }
+}
+function renderHouseTableFromCsvText(text){
+  if (!elHouseTbody) return;
+
+  const rows = parseCSV(text).filter(r => r.some(c => String(c).trim() !== ""));
+  if (rows.length < 2) {
+    elHouseTbody.innerHTML = `<tr><td colspan="2" style="color:var(--muted);padding:12px;">No house data</td></tr>`;
+    if (elHouseStatus) elHouseStatus.textContent = "No house rows";
+    return;
+  }
+
+  const headers = rows[0].map(h => normHeader(h));
+  const idxHouse = headers.indexOf("house");
+  const idxPts = headers.indexOf("overall points");
+
+  if (idxHouse < 0 || idxPts < 0) {
+    elHouseTbody.innerHTML = `<tr><td colspan="2" style="color:var(--muted);padding:12px;">Invalid house CSV headers</td></tr>`;
+    if (elHouseStatus) elHouseStatus.textContent = "Bad headers";
+    return;
+  }
+
+  const data = rows.slice(1)
+    .map(r => ({
+      house: String(r[idxHouse] ?? "").trim(),
+      points: toNumber(r[idxPts]),
+    }))
+    .filter(x => x.house)
+    .sort((a,b) => b.points - a.points);
+
+  elHouseTbody.innerHTML = "";
+
+  data.forEach((x, i) => {
+    const tr = document.createElement("tr");
+    const medal = (i === 0) ? "🥇 " : (i === 1) ? "🥈 " : (i === 2) ? "🥉 " : "";
+    tr.innerHTML = `
+      <td style="text-align:left; font-weight:${i<3 ? 800 : 600};">${medal}${escapeHtml(x.house)}</td>
+      <td style="text-align:right; font-variant-numeric: tabular-nums; font-weight:${i<3 ? 900 : 700};">${formatPoints(x.points)}</td>
+    `;
+    elHouseTbody.appendChild(tr);
+  });
+
+  if (elHouseStatus) elHouseStatus.textContent = `Loaded ${data.length} houses`;
 }
 
 
