@@ -393,7 +393,7 @@
 
 <script>
   // ✅ Replace with your published CSV URL:
-  const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTk-KNk3cqq2jSSBMgWV_Rsngfjxf14msu-KZjOK1qttLIrCK3mRB69NXoWVA_mbrOXbjjCsMKgerBe/pub?gid=1898788126&single=true&output=csv";
+  const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRu3etH39q0hOlR_YLhJdUqTvSQeAY_RLpcz1X1qSAaYnHo2SlAqkQK9RXzMt0GDUoy5-3aLTHyyHFt/pub?gid=0&single=true&output=csv";
 
   const REFRESH_SECONDS = 30;
   document.getElementById("refreshEvery").textContent = `${REFRESH_SECONDS}s`;
@@ -698,7 +698,7 @@
     clearError();
     elStatus.textContent = "Loading…";
 
-    if (!SHEET_CSV_URL || SHEET_CSV_URL.includes("https://docs.google.com/spreadsheets/d/e/2PACX-1vTk-KNk3cqq2jSSBMgWV_Rsngfjxf14msu-KZjOK1qttLIrCK3mRB69NXoWVA_mbrOXbjjCsMKgerBe/pub?gid=1898788126&single=true&output=csv")) {
+    if (!SHEET_CSV_URL || SHEET_CSV_URL.includes("https://docs.google.com/spreadsheets/d/e/2PACX-1vRu3etH39q0hOlR_YLhJdUqTvSQeAY_RLpcz1X1qSAaYnHo2SlAqkQK9RXzMt0GDUoy5-3aLTHyyHFt/pub?gid=0&single=true&output=csv")) {
       showError("Paste your published Google Sheets CSV URL into SHEET_CSV_URL in index.html.");
       elStatus.textContent = "Missing CSV URL";
       return;
