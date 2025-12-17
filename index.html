@@ -387,6 +387,24 @@
         </div>
       </div>
     </div>
+    <div class="card" style="margin-top:14px;">
+        <div style="padding:14px 14px 10px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+          <div style="font-size:14px; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.78);">
+            📄 Raw CSV (Live)
+          </div>
+          <button class="btn" id="btnCopyCsv">Copy CSV</button>
+        </div>
+      
+        <div style="border-top:1px solid rgba(255,255,255,.08);">
+          <pre id="rawCsv"
+               style="margin:0; padding:14px; max-height:300px; overflow:auto; background: rgba(0,0,0,.16); color: rgba(255,255,255,.88); font-size: 12px; line-height: 1.4;"></pre>
+        </div>
+      
+        <div class="footer" style="border-top:1px solid rgba(255,255,255,.08);">
+          <div>Shows the exact CSV returned by Google Sheets</div>
+          <div id="csvBytes">—</div>
+        </div>
+      </div>
 
     <div id="err" class="error" style="display:none;"></div>
   </div>
@@ -416,6 +434,8 @@
   const elTotal = document.getElementById("total");
   const elHouse = document.getElementById("houseFilter");
   const elComp = document.getElementById("compFilter");
+  const elRawCsv = document.getElementById("rawCsv");
+  const elCsvBytes = document.getElementById("csvBytes");
 
   function showError(msg){ elErr.style.display="block"; elErr.textContent=msg; }
   function clearError(){ elErr.style.display="none"; elErr.textContent=""; }
@@ -710,6 +730,9 @@
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const text = await res.text();
+      // Show raw CSV
+        if (elRawCsv) elRawCsv.textContent = text;
+        if (elCsvBytes) elCsvBytes.textContent = `${text.length.toLocaleString()} chars`;
       const rows = parseCSV(text).filter(r => r.some(c => String(c).trim() !== ""));
       if (rows.length < 2) throw new Error("CSV has no data rows.");
 
@@ -756,6 +779,16 @@
     sortDir = "desc";
     applyFiltersAndRender();
   });
+
+  document.getElementById("btnCopyCsv").addEventListener("click", async () => {
+  try {
+    const txt = elRawCsv?.textContent || "";
+    await navigator.clipboard.writeText(txt);
+    elStatus.textContent = "CSV copied to clipboard";
+  } catch (e) {
+    showError("Copy failed. Your browser may block clipboard access on this page.");
+  }
+});
 
   wireSortHeaders();
   load();
