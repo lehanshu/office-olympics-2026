@@ -698,7 +698,7 @@
     clearError();
     elStatus.textContent = "Loading…";
 
-    if (!SHEET_CSV_URL || SHEET_CSV_URL.includes("PASTE_YOUR_PUBLISHED_CSV_URL_HERE")) {
+    if (!SHEET_CSV_URL || SHEET_CSV_URL.includes("https://docs.google.com/spreadsheets/d/e/2PACX-1vTk-KNk3cqq2jSSBMgWV_Rsngfjxf14msu-KZjOK1qttLIrCK3mRB69NXoWVA_mbrOXbjjCsMKgerBe/pub?gid=1898788126&single=true&output=csv")) {
       showError("Paste your published Google Sheets CSV URL into SHEET_CSV_URL in index.html.");
       elStatus.textContent = "Missing CSV URL";
       return;
